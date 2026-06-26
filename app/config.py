@@ -33,5 +33,5 @@ SERPER_API_KEY = get_secret("SERPER_API_KEY")
 
 MODEL_NAME = get_secret(
     "MODEL_NAME",
-    "gemini-2.0-flash"
+    "gemini-2.5-flash"
 )

@@ -1,14 +1,16 @@
 from google import genai
+from google.genai import errors
 from app.config import GEMINI_API_KEY
+import time
 
 
 class GeminiClient:
-
     def __init__(self):
 
         if not GEMINI_API_KEY:
             raise ValueError(
-                "GEMINI_API_KEY not found. Add it to .env or Streamlit Secrets."
+                "❌ GEMINI_API_KEY not found.\n"
+                "Add it to your .env file (local) or Streamlit Secrets (cloud)."
             )
 
         self.client = genai.Client(
@@ -17,18 +19,32 @@ class GeminiClient:
 
     def generate(self, prompt, model_name):
 
-        try:
+        for attempt in range(3):
 
-            response = self.client.models.generate_content(
-                model=model_name,
-                contents=prompt
-            )
+            try:
 
-            return response.text
+                response = self.client.models.generate_content(
+                    model=model_name,
+                    contents=prompt
+                )
 
-        except Exception as e:
+                return response.text
 
-            return f"Error: {e}"
+            except errors.ServerError:
+                if attempt < 2:
+                    time.sleep(2)
+                    continue
+
+                return (
+                    "⚠️ Gemini server is currently busy (503).\n"
+                    "Please try again in a few seconds."
+                )
+
+            except errors.ClientError as e:
+                return f"❌ Client Error: {e}"
+
+            except Exception as e:
+                return f"❌ Error: {e}"
 
 
 gemini = GeminiClient()
